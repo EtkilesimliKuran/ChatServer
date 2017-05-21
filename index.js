@@ -22,7 +22,9 @@ app.use(bodyParser.json());
 
 
 app.get('/', function(request, response) {
-    response.json({success:'hello world'});
+
+            response.json({mess:"Hey"})
+
 })
 
 app.post('/register', function(req, res){
@@ -73,63 +75,69 @@ app.get('/surah',function (req,res) {
 
     if(control) {
 
-        Kuran.find({"Surah":{ $regex: tmp[0], $options: 'i' },"AyahNo":tmp[1] },function (err,surah) {
+        Kuran.findOne({"Surah":{ $regex: tmp[0], $options: 'i' },"AyahNo":tmp[1] },function (err,surah) {
 
 
-            if(surah!==null) {
-                res.json({surah:surah});
+            if(surah!==null&&surah.length!==0) {
+
+                res.json({soundlink:surah["soundlink"],mess:surah["Meal"]});
             }
 
             else
-               res.json("Başarısız");
+               res.json({soundlink:" ",mess:"üzgünüm, bir sonuç bulamadım."});
         })
     }
+    else
+        res.json({soundlink:" ",mess:"üzgünüm, bir sonuç bulamadım. Lütfen düzgün formatta tekrar dene."});
 
 })
 
 app.get('/meal',function (req,res) {
 
 
-    Kuran.find({"Meal":{ $regex:'^' +req.query.meal, $options: 'i' } }).limit(1).exec(function (err,meal) {
+    Kuran.findOne({"Meal":{ $regex:'^' +req.query.meal, $options: 'i' } }).limit(1).exec(function (err,meal) {
         if(err) throw err;
-        if(meal!==null) {
+        if(meal!==null&&meal.length!==0) {
+            var temp=" şu ayeti buldum."+meal["Surah"]+" "+meal["AyahNo"] +". ayet: "+meal["Meal"]
 
-            res.json({meal:meal})
+            res.json({soundlink:meal["soundlink"],mess:temp})
         }
 
         else
-            res.json({mess:"Başarısız"});
+            res.json({soundlink:" ",mess:"üzgünüm, bir sonuç bulamadım."});
     })
 
 })
 
 app.get('/hadis',function (req,res) {
 
-    Hadis.find({'HadisIcerigi':{ $regex:'^' +req.query.data, $options: 'i' } }).limit(1).exec(function (err,hadis) {
+    Hadis.findOne({'HadisIcerigi':{ $regex:'^' +req.query.data, $options: 'i' } }).limit(1).exec(function (err,hadis) {
 
         if(err) throw err;
-        if(hadis!==null) {
-            res.json({hadis:hadis})
+        if(hadis!==null&&hadis.length!==0) {
+            var had="şu hadisi buldum, "+hadis["Kaynak"]+" kaynağında "+hadis["Ravi"]+"'dan rivayet edildiğine göre : "+hadis["HadisIcerigi"]
+            res.json({mess:had})
         }
 
         else
-            res.json({mess:"Başarısız"});
+            res.json({mess:"üzgünüm, bir sonuç bulamadım."});
     })
 
 })
 
 app.get('/tefsir',function (req,res) {
 
-    Kuran.find({'Tefsir':{'$regex':'^'+req.query.tefsir, '$options' : 'i'}}).limit(1).exec(
+    Kuran.findOne({'Tefsir':{'$regex':'^'+req.query.tefsir, '$options' : 'i'}}).limit(1).exec(
         function(err, tefsir) {
 
             if(err) throw err;
-            if(tefsir!==null) {
-                res.json({tefsir:tefsir})
+            if(tefsir!==null&&tefsir.length!==0) {
+                var tef=tefsir["Surah"]+" "+tefsir["AyahNo"]+". ayet "+tefsir["Tefsir"]
+                res.json({mess:tef})
             }
 
             else
-                res.json({mess:"Başarısız"});
+                res.json({mess:"üzgünüm, bir sonuç bulamadım."});
 
         });
 })
@@ -142,33 +150,36 @@ app.get('/ayahtefsir',function (req,res) {
 
     if(control) {
 
-        Kuran.find({"Surah":{ $regex: tmp[0], $options: 'i' },"AyahNo":tmp[1] },function (err,tefsir) {
+        Kuran.findOne({"Surah":{ $regex: tmp[0], $options: 'i' },"AyahNo":tmp[1] },function (err,tefsir) {
 
             if(err) throw err;
 
-            if(tefsir!==null) {
-                res.json({tefsir:tefsir});
+            if(tefsir!==null&&tefsir.length!==0) {
+
+                res.json({mess:tefsir["Tefsir"]});
             }
 
             else
-                res.json("Başarısız");
+                res.json({mess:"üzgünüm, bir sonuç bulamadım."});
         })
     }
+    else
+        res.json({soundlink:" ",mess:"üzgünüm, bir sonuç bulamadım. Lütfen düzgün formatta tekrar dene."});
 })
 
 app.get('/sunnet',function (req,res) {
 
-    Sunnet.find({'Content':{'$regex':req.query.sunnet, '$options' : 'i'}}).limit(1).exec(
+    Sunnet.findOne({'Content':{'$regex':req.query.sunnet, '$options' : 'i'}},
         function(err, sunnet) {
             if(err) throw err;
 
-            if(sunnet!==null) {
+            if(sunnet!==null&&sunnet.length!==0) {
 
-                res.json({sunnet:sunnet})
+                res.json({mess:sunnet["Content"]})
             }
 
             else
-                res.json({mess:"Başarısız"});
+                res.json({mess:"üzgünüm, bir sonuç bulamadım."});
 
         })
 })
@@ -193,7 +204,8 @@ app.post('/notification',function (req,res){
 
                                 sendMessageToUser(
                                     "ayet",
-                                    {message: result})
+                                    {message: result["Meal"]})
+
 
                             });
 
@@ -209,9 +221,10 @@ app.post('/notification',function (req,res){
                         Sunnet.findOne().skip(random).exec(
                             function (err, result) {
 
-                                sendMessageToUser(
+                               sendMessageToUser(
                                     "sünnet",
-                                    {message: result})
+                                    {message: result["Content"]})
+
 
                             });
 
@@ -226,9 +239,9 @@ app.post('/notification',function (req,res){
                         Hadis.findOne().skip(random).exec(
                             function (err, result) {
 
-                                sendMessageToUser(
+                              sendMessageToUser(
                                     "hadis",
-                                    {message: result})
+                                    {message: result["HadisIcerigi"]})
 
                             });
 
@@ -264,7 +277,8 @@ function sendMessageToUser(not,message) {
                 "content_available": true,
                 "notification" : {
                     "body":"1 Yeni Bildirim",
-                    "title":"Günlük "+not
+                    "title":"Günlük "+not,
+                    "click_action" :"ChatActivity"
                 }
             }
         )

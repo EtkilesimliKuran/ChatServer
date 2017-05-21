@@ -3,10 +3,12 @@ var Schema = mongoose.Schema;
 
 // set up a mongoose model
 module.exports = mongoose.model('Kuran', new Schema({
-    tefsir : [{
+
         Surah : String,
+        AyahNo : Number,
         Meal: String,
-        Tefsir: String
-    }]
+        Tefsir: String,
+        soundlink:String
+
 
 }));
