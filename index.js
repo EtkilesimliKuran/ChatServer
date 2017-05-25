@@ -75,7 +75,7 @@ app.get('/surah',function (req,res) {
 
     if(control) {
 
-        Kuran.findOne({"Surah":{ $regex: tmp[0], $options: 'i' },"AyahNo":tmp[1] },function (err,surah) {
+        Kuran.findOne({"Surah":{ $regex: '^'+tmp[0]+'$', $options: 'i' },"AyahNo":tmp[1] },function (err,surah) {
 
 
             if(surah!==null&&surah.length!==0) {
@@ -150,7 +150,7 @@ app.get('/ayahtefsir',function (req,res) {
 
     if(control) {
 
-        Kuran.findOne({"Surah":{ $regex: tmp[0], $options: 'i' },"AyahNo":tmp[1] },function (err,tefsir) {
+        Kuran.findOne({"Surah":{ $regex: '^'+tmp[0]+'$', $options: 'i' },"AyahNo":tmp[1] },function (err,tefsir) {
 
             if(err) throw err;
 
@@ -204,7 +204,7 @@ app.post('/notification',function (req,res){
 
                                 sendMessageToUser(
                                     "ayet",
-                                    {message: result["Meal"]})
+                                    {message: result["Meal"]},usr.regID)
 
 
                             });
@@ -223,7 +223,7 @@ app.post('/notification',function (req,res){
 
                                sendMessageToUser(
                                     "sünnet",
-                                    {message: result["Content"]})
+                                    {message: result["Content"]},usr.regID)
 
 
                             });
@@ -241,7 +241,7 @@ app.post('/notification',function (req,res){
 
                               sendMessageToUser(
                                     "hadis",
-                                    {message: result["HadisIcerigi"]})
+                                    {message: result["HadisIcerigi"]},usr.regID)
 
                             });
 
@@ -259,7 +259,7 @@ app.post('/notification',function (req,res){
 })
 
 
-function sendMessageToUser(not,message) {
+function sendMessageToUser(not,message,regid) {
     request({
         url: 'https://fcm.googleapis.com/fcm/send',
         method: 'POST',
@@ -270,15 +270,18 @@ function sendMessageToUser(not,message) {
         },
         body: JSON.stringify(
             {
-                "data": {
-                    "message": message
-                },
-                "to": 'fL8U-AvOyH8:APA91bEupNq_cdlEqTgh1e_0v-XXmNgD77oX9Ef_k6jSvpfERatHdMrnKj3SDhUewNGlLh8DMF_U01xzWUNQ3HETqWJeHeKS6qt4duu9ngl0LydABkiNpOMK9dqaGr1yBnvz3__NXJin',
+
+                "to": regid,
                 "content_available": true,
                 "notification" : {
                     "body":"1 Yeni Bildirim",
                     "title":"Günlük "+not,
                     "click_action" :"ChatActivity"
+
+
+                },
+                "data": {
+                    "message": message
                 }
             }
         )
